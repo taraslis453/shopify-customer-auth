@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - POSTGRESQL_USER=${POSTGRESQL_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+    depends_on:
+      - postgresdb
+    ports:
+      - 8080:8080
+  postgresdb:
+    image: postgres:14.4-alpine
+    environment:
+      - POSTGRES_HOST=${POSTGRESQL_HOST}
+      - POSTGRES_USER=${POSTGRESQL_USER}
+      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRES_DB=${POSTGRESQL_DATABASE}
+    volumes:
+      - postgresAPI:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+volumes:
+  api:
+  postgresAPI:
+    driver: local
