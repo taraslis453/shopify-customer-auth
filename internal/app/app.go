@@ -46,6 +46,7 @@ func Run(cfg *config.Config) {
 
 	storages := service.Storages{
 		Customer: storage.NewCustomerStorage(postgresql),
+		Store:    storage.NewStoreStorage(postgresql),
 	}
 
 	apis := service.APIs{
@@ -64,6 +65,7 @@ func Run(cfg *config.Config) {
 
 	services := service.Services{
 		Customer: service.NewCustomerService(serviceOptions),
+		Vendor:   service.NewVendorService(serviceOptions),
 	}
 
 	httpHandler := gin.New()

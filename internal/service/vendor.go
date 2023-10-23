@@ -13,7 +13,7 @@ type vendorService struct {
 
 var _ VendorService = (*vendorService)(nil)
 
-func NewVendorService(options *Options) *vendorService {
+func NewVendorService(options Options) *vendorService {
 	return &vendorService{
 		serviceContext: serviceContext{
 			apis:     options.APIs,
@@ -49,7 +49,7 @@ func (s *vendorService) HandleInstall(c *gin.Context) (string, error) {
 
 	redirectURL := s.cfg.App.BaseURL + "/vendors/redirect"
 
-	newStore, redirectURL, err := s.apis.VendorAPI.HandleInstall(c, redirectURL)
+	newStore, redirectURL, err := s.apis.VendorAPI.WithStore(store).HandleInstall(c, redirectURL)
 	if err != nil {
 		logger.Error("failed to handle install", "err", err)
 		return "", fmt.Errorf("failed to handle install: %w", err)
@@ -92,7 +92,7 @@ func (s *vendorService) HandleRedirect(c *gin.Context) (string, error) {
 	logger = logger.With("store", store)
 	logger.Debug("got store")
 
-	newStore, err := s.apis.VendorAPI.HandleRedirect(c)
+	newStore, err := s.apis.VendorAPI.WithStore(store).HandleRedirect(c)
 	if err != nil {
 		if errs.IsExpected(err) {
 			logger.Info(err.Error())
