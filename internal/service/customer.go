@@ -25,6 +25,7 @@ func NewCustomerService(options Options) *customerService {
 			storages: options.Storages,
 			cfg:      options.Config,
 			logger:   options.Logger.Named("customerService"),
+			apis:     options.APIs,
 		},
 	}
 }
@@ -35,7 +36,17 @@ func (s *customerService) LoginCustomer(ctx context.Context, opts LoginCustomerO
 		WithContext(ctx).
 		With("opts", opts)
 
-	vendorCustomerID, err := s.apis.VendorAPI.GetLoggedInCustomerID(ctx, LoginCustomerOptions{
+	store, err := s.storages.Store.GetStore(&opts.StoreVendorID)
+	if err != nil {
+		logger.Error("failed to get store", "err", err)
+		return "", fmt.Errorf("failed to get store: %w", err)
+	}
+	if store == nil {
+		logger.Info("store not found")
+		return "", ErrLoginCustomerStoreNotFound
+	}
+
+	vendorCustomerID, err := s.apis.VendorAPI.WithStore(store).GetLoggedInCustomerID(ctx, LoginCustomerOptions{
 		Email:    opts.Email,
 		Password: opts.Password,
 	})
@@ -57,14 +68,14 @@ func (s *customerService) LoginCustomer(ctx context.Context, opts LoginCustomerO
 		return "", fmt.Errorf("failed to get customer through storage: %w", err)
 	}
 	if customer == nil {
-		createdCustomer, err := s.storages.Customer.CreateCustomer(&entity.Customer{
+		customer, err = s.storages.Customer.CreateCustomer(&entity.Customer{
 			VendorCustomerID: vendorCustomerID,
 		})
 		if err != nil {
 			logger.Error("failed to create customer in storage", "err", err)
 			return "", fmt.Errorf("failed to create customer in storage: %w", err)
 		}
-		logger.Debug("created customer", "createdCustomer", createdCustomer)
+		logger.Debug("created customer", "createdCustomer", customer)
 	} else {
 		logger.Debug("got customer", "customer", customer)
 	}
@@ -123,7 +134,7 @@ func (s *customerService) RefreshCustomerAccessToken(ctx context.Context, access
 	}
 	if refreshAccessTokenClaims.ExpAt.Before(time.Now()) {
 		logger.Info("token expired")
-		return "", ErrRefreshCustomerTokenInvalidToken
+		return "", ErrRefreshCustomerTokenTokenExpired
 	}
 
 	t := time.Now()

@@ -22,9 +22,7 @@ func (s *shopifyAPI) GetLoggedInCustomerID(ctx context.Context, opt service.Logi
 	        password: $password,
 	    }) {
 	        customerAccessToken {
-              customer {
-                id
-              }
+            accessToken
 	        }
 	        customerUserErrors {
 	            code
@@ -38,18 +36,18 @@ func (s *shopifyAPI) GetLoggedInCustomerID(ctx context.Context, opt service.Logi
 		"password": opt.Password,
 	}
 
-	var data struct {
-		CustomerAccessTokenCreate struct {
-			CustomerAccessToken struct {
-				Customer struct {
-					ID string `json:"id"`
-				} `json:"customer"`
-			} `json:"customerAccessToken"`
-			CustomerUserErrors []struct {
-				Code    string `json:"code"`
-				Message string `json:"message"`
-			} `json:"customerUserErrors"`
-		} `json:"customerAccessTokenCreate"`
+	var customerLoginData struct {
+		Data struct {
+			CustomerAccessTokenCreate struct {
+				CustomerAccessToken struct {
+					AccessToken string `json:"accessToken"`
+				} `json:"customerAccessToken"`
+				CustomerUserErrors []struct {
+					Code    string `json:"code"`
+					Message string `json:"message"`
+				} `json:"customerUserErrors"`
+			} `json:"customerAccessTokenCreate"`
+		} `json:"data"`
 	}
 
 	resp, err := s.graphQL.R().
@@ -57,7 +55,7 @@ func (s *shopifyAPI) GetLoggedInCustomerID(ctx context.Context, opt service.Logi
 			"query":     query,
 			"variables": variables,
 		}).
-		SetResult(&data).
+		SetResult(&customerLoginData).
 		Post("")
 	if err != nil {
 		logger.Error("failed to login customer", "err", err)
@@ -65,15 +63,48 @@ func (s *shopifyAPI) GetLoggedInCustomerID(ctx context.Context, opt service.Logi
 	}
 	if resp.StatusCode() != http.StatusOK {
 		logger.Error("failed to login customer", "response", resp.String())
-		return "", err
+		return "", fmt.Errorf("failed to login customer: http status %d, body %s", resp.StatusCode(), resp.String())
 	}
-	if len(data.CustomerAccessTokenCreate.CustomerUserErrors) > 0 && data.CustomerAccessTokenCreate.CustomerUserErrors[0].Code == "UNIDENTIFIED_CUSTOMER" {
+	if len(customerLoginData.Data.CustomerAccessTokenCreate.CustomerUserErrors) > 0 && customerLoginData.Data.CustomerAccessTokenCreate.CustomerUserErrors[0].Code == "UNIDENTIFIED_CUSTOMER" {
 		logger.Info("invalid email or password")
 		return "", service.ErrLoginCustomerInvalidEmailOrPassword
 	}
 
-	logger.Debug("got customer", "customer", data.CustomerAccessTokenCreate.CustomerAccessToken.Customer)
-	return data.CustomerAccessTokenCreate.CustomerAccessToken.Customer.ID, nil
+	query = `
+  query GetCustomerByAccessToken($accessToken: String!) {
+    customer(customerAccessToken: $accessToken) {
+      id
+    }
+  }`
+
+	variables = map[string]interface{}{
+		"accessToken": customerLoginData.Data.CustomerAccessTokenCreate.CustomerAccessToken.AccessToken,
+	}
+
+	var customerData struct {
+		Customer struct {
+			ID string `json:"id"`
+		} `json:"customer"`
+	}
+
+	resp, err = s.graphQL.R().
+		SetBody(map[string]interface{}{
+			"query":     query,
+			"variables": variables,
+		}).
+		SetResult(&customerData).
+		Post("")
+	if err != nil {
+		logger.Error("failed to get customer by access token", "err", err)
+		return "", err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		logger.Error("failed to get customer by access token", "response", resp.String())
+		return "", fmt.Errorf("failed to get customer by access token: http status %d, body %s", resp.StatusCode(), resp.String())
+	}
+
+	logger.Debug("got customer", "customer", customerData.Customer.ID)
+	return customerData.Customer.ID, nil
 }
 
 // ShopifyCustomer contains information about customer.

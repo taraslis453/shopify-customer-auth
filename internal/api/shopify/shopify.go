@@ -50,7 +50,7 @@ func (v *shopifyAPI) WithStore(store *entity.Store) service.VendorAPI {
 
 	g = resty.New().
 		SetBaseURL(fmt.Sprintf(`https://%s.myshopify.com/api/2023-01/graphql.json`, shopName)).
-		SetHeader("Shopify-Storefront-Private-Token", store.GraphAPIAccessToken).
+		SetHeader("X-Shopify-Storefront-Access-Token", store.StoreFrontAccessToken).
 		SetHeader("Content-Type", "application/json")
 
 	return &shopifyAPI{

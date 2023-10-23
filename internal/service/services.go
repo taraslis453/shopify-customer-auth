@@ -58,6 +58,7 @@ type CustomerService interface {
 }
 
 var (
+	ErrLoginCustomerStoreNotFound          = errs.New("store not found", storeNotFoundErrCode)
 	ErrLoginCustomerInvalidEmailOrPassword = errs.New("invalid email or password", customerInvalidEmailOrPasswordErrCode)
 
 	ErrVerifyCustomerTokenInvalidToken     = errs.New("invalid authenticate token.", invalidTokenErrCode)
@@ -73,8 +74,9 @@ var (
 )
 
 type LoginCustomerOptions struct {
-	Email    string
-	Password string
+	Email         string
+	Password      string
+	StoreVendorID string
 }
 
 type VerifyTokenOptions struct {

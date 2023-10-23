@@ -23,7 +23,7 @@ func (v *shopifyAPI) HandleInstall(c *gin.Context, redirectURL string) (*entity.
 
 	values := url.Values{
 		"client_id":       {v.store.ClientID},
-		"scope":           {"read_customers"},
+		"scope":           {"read_products,write_products,unauthenticated_read_content,unauthenticated_read_customer_tags,unauthenticated_read_product_tags,unauthenticated_read_product_listings,unauthenticated_write_checkouts,unauthenticated_read_checkouts,unauthenticated_write_customers,unauthenticated_read_customers"},
 		"redirect_uri":    {redirectURL},
 		"state":           {""},        // nonce
 		"grant_options[]": {"offline"}, // https://shopify.dev/concepts/about-apis/authentication#api-access-modes
@@ -89,48 +89,50 @@ func (v *shopifyAPI) HandleRedirect(c *gin.Context) (*entity.Store, error) {
 	v.store.AccessToken = credentials["access_token"]
 	v.store.Scope = credentials["scope"]
 
-	graphAPIAccessToken, err := v.GetGraphAPIAccessToken()
+	storeFrontAccessToken, err := v.getStoreFrontAccessToken()
 	if err != nil {
-		logger.Error("failed to get GraphAPI access token", "err", err)
-		return nil, fmt.Errorf("failed to get GraphAPI access token: %w", err)
+		logger.Error("failed to get StoreFront access token", "err", err)
+		return nil, fmt.Errorf("failed to get StoreFront access token: %w", err)
 	}
-	v.store.GraphAPIAccessToken = graphAPIAccessToken
-	logger = logger.With("updatedConfig", v.store)
+	v.store.StoreFrontAccessToken = storeFrontAccessToken
 
 	logger.Info("successfully got credentials")
 	return v.store, nil
 }
 
-// GetGraphAPIAccessToken gets a GraphAPI access token for the store.
-// https://shopify.dev/api/usage/authentication#access-tokens-for-the-storefront-api
-// https://shopify.dev/apps/auth/oauth/delegate-access-tokens
-func (v *shopifyAPI) GetGraphAPIAccessToken() (string, error) {
-	logger := v.logger.Named("GetGraphAPIAccessToken")
+// getStoreFrontAccessToken gets a StoreFront access token for the store.
+func (v *shopifyAPI) getStoreFrontAccessToken() (string, error) {
+	logger := v.logger.Named("GetStoreFrontAccessToken")
 
-	var credentials map[string]string
+	var credentials struct {
+		StoreFrontAccessToken struct {
+			AccessToken string `json:"access_token"`
+		} `json:"storefront_access_token"`
+	}
 
 	res, err := v.http.R().
 		SetHeader("X-Shopify-Access-Token", v.store.AccessToken).
-		SetBody(map[string][]string{
-			"delegate_access_scope": {
-				"read_customers",
+		SetBody(map[string]interface{}{
+			"storefront_access_token": map[string]interface{}{
+				"title": "StoreFront Access Token",
 			},
 		}).
 		SetResult(&credentials).
-		Post(fmt.Sprintf("https://%s/admin/access_tokens/delegate.json", v.store.VendorID))
+		Post(fmt.Sprintf("https://%s/admin/api/2023-04/storefront_access_tokens.json", v.store.VendorID))
 	if err != nil {
-		logger.Error("failed to send get GraphAPI access token request", "err", err)
-		return "", fmt.Errorf("failed to send get GraphAPI access token request: %w", err)
+		logger.Error("failed to send get StoreFront access token request", "err", err)
+		return "", fmt.Errorf("failed to send get StoreFront access token request: %w", err)
 	}
 	if res.StatusCode() != http.StatusOK {
-		logger.Error("failed to get GraphAPI access token", "resBody", res.String())
-		return "", fmt.Errorf("failed to get GraphAPI access token: http status %d, body %s", res.StatusCode(), res.String())
+		logger.Error("failed to get StoreFront access token", "resBody", res.String())
+		return "", fmt.Errorf("failed to get StoreFront access token: http status %d, body %s", res.StatusCode(), res.String())
+
 	}
 	logger = logger.With("resBody", res.String())
 
-	token := credentials["access_token"]
+	token := credentials.StoreFrontAccessToken.AccessToken
 	logger = logger.With("token", token)
 
-	logger.Info("successfully got GraphAPI access token")
+	logger.Info("successfully got StoreFront access token")
 	return token, nil
 }

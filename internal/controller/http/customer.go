@@ -22,15 +22,15 @@ func newCustomerRoutes(options RouterOptions) {
 
 	p := options.Handler.Group("/customers")
 	{
-		p.GET("/login", errorHandler(options, r.loginCustomer))
+		p.POST("/login", errorHandler(options, r.loginCustomer))
 		p.POST("/refresh-token", errorHandler(options, r.refreshToken))
 		p.GET("/me", newAuthMiddleware(options), errorHandler(options, r.getCustomer))
 	}
 }
 
-type loginCustomerRequestQuery struct {
-	Email    string `form:"email" json:"email" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
+type loginCustomerRequestBody struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type loginCustomerResponse struct {
@@ -40,18 +40,19 @@ type loginCustomerResponse struct {
 func (r *customerRoutes) loginCustomer(c *gin.Context) (interface{}, *httpErr) {
 	logger := r.logger.Named("loginCustomer").WithContext(c)
 
-	var query loginCustomerRequestQuery
-	err := c.ShouldBindQuery(&query)
-	if err != nil {
-		logger.Info("failed to parse query", "err", err)
-		return nil, &httpErr{Type: httpErrTypeClient, Message: "invalid request query", Details: err}
+	var body loginCustomerRequestBody
+	if err := c.ShouldBindJSON(&body); err != nil {
+		logger.Info("failed to parse request body", "err", err)
+		return nil, &httpErr{Type: httpErrTypeClient, Message: "invalid request body", Details: err}
 	}
-	logger = logger.With("query", query)
-	logger.Debug("parsed query")
+	logger = logger.With("body", body)
+	logger.Info("successfully parsed request body")
 
 	accessToken, err := r.services.Customer.LoginCustomer(c, service.LoginCustomerOptions{
-		Email:    query.Email,
-		Password: query.Password,
+		Email:    body.Email,
+		Password: body.Password,
+		// https://taras-store88.myshopify.com => taras-store88.myshopify.com
+		StoreVendorID: c.GetHeader("Origin")[8:],
 	})
 	if err != nil {
 		if errs.IsExpected(err) {
