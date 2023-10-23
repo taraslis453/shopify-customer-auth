@@ -8,8 +8,7 @@ import (
 
 // Store model represents a store.
 type Store struct {
-	ID      string `json:"id" gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
-	StoreID string `json:"storeId" gorm:"type:uuid;index"`
+	ID string `json:"id" gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 
 	VendorID            string `json:"vendorId" binding:"required"`
 	Scope               string `json:"scope"`
