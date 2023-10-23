@@ -265,7 +265,17 @@ func (s *customerService) GetCustomer(ctx context.Context, opts GetCustomerOptio
 	}
 	logger.Debug("got customer", "customer", customer)
 
-	vendorCustomer, err := s.apis.VendorAPI.GetCustomerByVendorID(ctx, customer.VendorCustomerID)
+	store, err := s.storages.Store.GetStore(&opts.StoreVendorID)
+	if err != nil {
+		logger.Error("failed to get store", "err", err)
+		return nil, fmt.Errorf("failed to get store: %w", err)
+	}
+	if store == nil {
+		logger.Info("store not found")
+		return nil, ErrGetCustomerStoreNotFound
+	}
+
+	vendorCustomer, err := s.apis.VendorAPI.WithStore(store).GetCustomerByVendorID(ctx, customer.VendorCustomerID)
 	if err != nil {
 		logger.Error("failed to get customer from vendor", "err", err)
 		return nil, fmt.Errorf("failed to get customer from vendor: %w", err)

@@ -111,7 +111,8 @@ func (r *customerRoutes) getCustomer(c *gin.Context) (interface{}, *httpErr) {
 	logger = logger.With("customerID", customerID)
 
 	customer, err := r.services.Customer.GetCustomer(c, service.GetCustomerOptions{
-		ID: customerID,
+		ID:            customerID,
+		StoreVendorID: c.GetHeader("Origin")[8:],
 	})
 	if err != nil {
 		if errs.IsExpected(err) {

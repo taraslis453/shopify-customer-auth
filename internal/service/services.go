@@ -71,6 +71,7 @@ var (
 
 	ErrGetCustomerCustomerNotFoundInStorage = errs.New("customer not found in storage", customerNotFoundErrCode)
 	ErrGetCustomerCustomerNotFoundInVendor  = errs.New("customer not found in vendor", customerNotFoundErrCode)
+	ErrGetCustomerStoreNotFound             = errs.New("store not found", storeNotFoundErrCode)
 )
 
 type LoginCustomerOptions struct {
@@ -85,8 +86,9 @@ type VerifyTokenOptions struct {
 }
 
 type GetCustomerOptions struct {
-	ID           string
-	EmailAddress string
+	ID            string
+	EmailAddress  string
+	StoreVendorID string
 }
 
 type GenerateCustomerTokensOutput struct {

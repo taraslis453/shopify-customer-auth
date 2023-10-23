@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/taraslis453/shopify-customer-auth/internal/entity"
 	"github.com/taraslis453/shopify-customer-auth/internal/service"
@@ -82,9 +83,11 @@ func (s *shopifyAPI) GetLoggedInCustomerID(ctx context.Context, opt service.Logi
 	}
 
 	var customerData struct {
-		Customer struct {
-			ID string `json:"id"`
-		} `json:"customer"`
+		Data struct {
+			Customer struct {
+				ID string `json:"id"`
+			} `json:"customer"`
+		} `json:"data"`
 	}
 
 	resp, err = s.graphQL.R().
@@ -103,8 +106,10 @@ func (s *shopifyAPI) GetLoggedInCustomerID(ctx context.Context, opt service.Logi
 		return "", fmt.Errorf("failed to get customer by access token: http status %d, body %s", resp.StatusCode(), resp.String())
 	}
 
-	logger.Debug("got customer", "customer", customerData.Customer.ID)
-	return customerData.Customer.ID, nil
+	customerID := strings.Replace(customerData.Data.Customer.ID, "gid://shopify/Customer/", "", 1)
+
+	logger.Info("successfully logged in customer")
+	return customerID, nil
 }
 
 // ShopifyCustomer contains information about customer.

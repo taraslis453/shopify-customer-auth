@@ -23,7 +23,7 @@ func (v *shopifyAPI) HandleInstall(c *gin.Context, redirectURL string) (*entity.
 
 	values := url.Values{
 		"client_id":       {v.store.ClientID},
-		"scope":           {"read_products,write_products,unauthenticated_read_content,unauthenticated_read_customer_tags,unauthenticated_read_product_tags,unauthenticated_read_product_listings,unauthenticated_write_checkouts,unauthenticated_read_checkouts,unauthenticated_write_customers,unauthenticated_read_customers"},
+		"scope":           {"read_products,write_products,unauthenticated_read_content,unauthenticated_read_customer_tags,unauthenticated_read_product_tags,unauthenticated_read_product_listings,unauthenticated_write_checkouts,unauthenticated_read_checkouts,unauthenticated_write_customers,unauthenticated_read_customers,read_customers"},
 		"redirect_uri":    {redirectURL},
 		"state":           {""},        // nonce
 		"grant_options[]": {"offline"}, // https://shopify.dev/concepts/about-apis/authentication#api-access-modes
