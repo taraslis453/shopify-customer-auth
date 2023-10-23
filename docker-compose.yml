@@ -21,10 +21,10 @@ services:
       - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
       - POSTGRES_DB=${POSTGRESQL_DATABASE}
     volumes:
-      - postgresAPI:/var/lib/postgresql/data
+      - postgresShopifyAuth:/var/lib/postgresql/data
     ports:
       - 5432:5432
 volumes:
   api:
-  postgresAPI:
+  postgresShopifyAuth:
     driver: local

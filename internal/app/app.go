@@ -34,7 +34,8 @@ func Run(cfg *config.Config) {
 	}
 
 	err = postgresql.DB.AutoMigrate(
-		&entity.User{},
+		&entity.Store{},
+		&entity.Customer{},
 	)
 	if err != nil {
 		log.Fatal(fmt.Errorf("automigration failed: %w", err))
