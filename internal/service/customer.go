@@ -49,7 +49,7 @@ func (s *customerService) LoginCustomer(ctx context.Context, opts LoginCustomerO
 		return "", fmt.Errorf("failed to login customer: %w", err)
 	}
 
-	customer, err := s.storages.Customer.GetCustomer(ctx, GetCustomerFilter{
+	customer, err := s.storages.Customer.GetCustomer(GetCustomerFilter{
 		VendorCustomerID: &vendorCustomerID,
 	})
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *customerService) LoginCustomer(ctx context.Context, opts LoginCustomerO
 		return "", fmt.Errorf("failed to get customer through storage: %w", err)
 	}
 	if customer == nil {
-		createdCustomer, err := s.storages.Customer.CreateCustomer(ctx, &entity.Customer{
+		createdCustomer, err := s.storages.Customer.CreateCustomer(&entity.Customer{
 			VendorCustomerID: vendorCustomerID,
 		})
 		if err != nil {
@@ -76,7 +76,7 @@ func (s *customerService) LoginCustomer(ctx context.Context, opts LoginCustomerO
 		return "", fmt.Errorf("failed to generate tokens: %w", err)
 	}
 
-	customer, err = s.storages.Customer.UpdateCustomer(ctx, customer.ID, &entity.Customer{
+	customer, err = s.storages.Customer.UpdateCustomer(customer.ID, &entity.Customer{
 		RefreshToken: tokens.RefreshToken,
 	})
 	if err != nil {
@@ -105,7 +105,7 @@ func (s *customerService) RefreshCustomerAccessToken(ctx context.Context, access
 		return "", ErrRefreshCustomerTokenInvalidToken
 	}
 
-	customer, err := s.storages.Customer.GetCustomer(ctx, GetCustomerFilter{ID: &claimsData.UserID})
+	customer, err := s.storages.Customer.GetCustomer(GetCustomerFilter{ID: &claimsData.UserID})
 	if err != nil {
 		logger.Error("failed to get customer", "err", err)
 		return "", fmt.Errorf("failed to get customer: %w", err)
@@ -169,7 +169,7 @@ func (s *customerService) VerifyCustomerAccessToken(ctx context.Context, accessT
 		return nil, ErrVerifyCustomerTokenTokenExpired
 	}
 
-	customer, err := s.storages.Customer.GetCustomer(ctx, GetCustomerFilter{ID: &claimsData.UserID})
+	customer, err := s.storages.Customer.GetCustomer(GetCustomerFilter{ID: &claimsData.UserID})
 	if err != nil {
 		logger.Error("failed to get customer", "err", err)
 		return nil, fmt.Errorf("failed to get customer: %w", err)
@@ -241,7 +241,7 @@ func (s *customerService) GetCustomer(ctx context.Context, opts GetCustomerOptio
 		WithContext(ctx).
 		With("opts", opts)
 
-	customer, err := s.storages.Customer.GetCustomer(ctx, GetCustomerFilter{
+	customer, err := s.storages.Customer.GetCustomer(GetCustomerFilter{
 		ID: &opts.ID,
 	})
 	if err != nil {

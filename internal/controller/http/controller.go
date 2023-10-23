@@ -54,7 +54,8 @@ func New(options Options) {
 
 	options.Handler.GET("/ping", func(c *gin.Context) { c.Status(http.StatusOK) })
 	{
-		newUserRoutes(routerOptions)
+		newCustomerRoutes(routerOptions)
+		newVendorRoutes(routerOptions)
 	}
 }
 

@@ -11,7 +11,7 @@ type customerRoutes struct {
 	routerContext
 }
 
-func newUserRoutes(options RouterOptions) {
+func newCustomerRoutes(options RouterOptions) {
 	r := &customerRoutes{
 		routerContext{
 			services: options.Services,

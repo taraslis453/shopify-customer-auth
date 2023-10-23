@@ -28,8 +28,8 @@ type Options struct {
 
 var _ service.VendorAPI = (*shopifyAPI)(nil)
 
-// NewAPI is used to create a new shopifyAPI instance.
-func NewAPI(options *Options) *shopifyAPI {
+// New is used to create a new shopifyAPI instance.
+func New(options *Options) *shopifyAPI {
 	return &shopifyAPI{
 		logger: options.Logger.Named("ShopifyAPI"),
 		cfg:    options.Config,

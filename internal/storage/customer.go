@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -23,7 +22,7 @@ func NewCustomerStorage(postgresql *postgresql.PostgreSQLGorm) *customerStorage 
 	return &customerStorage{postgresql}
 }
 
-func (r *customerStorage) GetCustomer(ctx context.Context, filter service.GetCustomerFilter) (*entity.Customer, error) {
+func (r *customerStorage) GetCustomer(filter service.GetCustomerFilter) (*entity.Customer, error) {
 	stmt := r.DB
 	if filter.ID != nil {
 		stmt = stmt.Where(entity.Customer{ID: *filter.ID})
@@ -44,7 +43,7 @@ func (r *customerStorage) GetCustomer(ctx context.Context, filter service.GetCus
 	return &customer, nil
 }
 
-func (r *customerStorage) CreateCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error) {
+func (r *customerStorage) CreateCustomer(customer *entity.Customer) (*entity.Customer, error) {
 	err := r.DB.Create(customer).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to create customer: %w", err)
@@ -53,7 +52,7 @@ func (r *customerStorage) CreateCustomer(ctx context.Context, customer *entity.C
 	return customer, nil
 }
 
-func (r *customerStorage) UpdateCustomer(ctx context.Context, id string, customer *entity.Customer) (*entity.Customer, error) {
+func (r *customerStorage) UpdateCustomer(id string, customer *entity.Customer) (*entity.Customer, error) {
 	err := r.DB.Model(&entity.Customer{}).Where("id = ?", id).Updates(customer).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to update customer: %w", err)

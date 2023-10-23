@@ -14,6 +14,9 @@ import (
 	"github.com/taraslis453/shopify-customer-auth/pkg/logging"
 	"github.com/taraslis453/shopify-customer-auth/pkg/postgresql"
 
+	"github.com/taraslis453/shopify-customer-auth/internal/api/shopify"
+	"github.com/taraslis453/shopify-customer-auth/internal/storage"
+
 	httpController "github.com/taraslis453/shopify-customer-auth/internal/controller/http"
 	"github.com/taraslis453/shopify-customer-auth/internal/entity"
 	"github.com/taraslis453/shopify-customer-auth/internal/service"
@@ -41,9 +44,19 @@ func Run(cfg *config.Config) {
 		log.Fatal(fmt.Errorf("automigration failed: %w", err))
 	}
 
-	storages := service.Storages{}
+	storages := service.Storages{
+		Customer: storage.NewCustomerStorage(postgresql),
+	}
+
+	apis := service.APIs{
+		VendorAPI: shopify.New(&shopify.Options{
+			Logger: logger,
+			Config: cfg,
+		}),
+	}
 
 	serviceOptions := service.Options{
+		APIs:     apis,
 		Storages: storages,
 		Config:   cfg,
 		Logger:   logger,

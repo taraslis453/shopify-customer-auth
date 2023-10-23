@@ -4,10 +4,15 @@ import "time"
 
 type (
 	Config struct {
+		App
 		HTTP
 		Log
 		Auth
 		PostgreSQL
+	}
+
+	App struct {
+		BaseURL string `env:"APP_BASE_URL"    env-default:"http://localhost:8080"`
 	}
 
 	HTTP struct {
