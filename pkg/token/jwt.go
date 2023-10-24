@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -34,28 +35,38 @@ func SignJWTToken(claims Claims, secret string) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
+type VerifyJWTTokenOptions struct {
+	Token                string
+	Secret               string
+	NotToCheckExpiration bool
+}
+
 // VerifyJWTToken verifies JWT token signature and returns it's claims.
-func VerifyJWTToken(tokenStr string, secret string) (*UniversalClaims, error) {
-	// Parse takes the token string and a function for looking up the key. The latter is especially
-	// useful if you use multiple keys for your application.  The standard is to use 'kid' in the
-	// head of the token to identify which key to use, but the parsed token (head and claims) is provided
-	// to the callback, providing flexibility
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
+// VerifyJWTToken verifies JWT token signature and returns it's claims without checking expiration.
+func VerifyJWTToken(opt VerifyJWTTokenOptions) (*UniversalClaims, error) {
+	token, err := jwt.Parse(opt.Token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(secret), nil
+		return []byte(opt.Secret), nil
 	})
-	if err != nil {
+
+	// Skip checking error for expiration, but still check for other types of errors.
+	if err != nil && !strings.Contains(err.Error(), "token is expired") {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	// Always verify jwt.MapClaims because of universality. Also do not forget
-	// to check if token is valid
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
+	if !ok {
 		return nil, fmt.Errorf("invalid claims")
+	}
+
+	if !opt.NotToCheckExpiration {
+		if exp, ok := claims["exp"].(float64); ok {
+			if time.Now().Unix() > int64(exp) {
+				return nil, fmt.Errorf("token is expired")
+			}
+		}
 	}
 
 	return parseJWTClaims(claims)

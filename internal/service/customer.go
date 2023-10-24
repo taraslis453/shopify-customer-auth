@@ -106,7 +106,11 @@ func (s *customerService) RefreshCustomerAccessToken(ctx context.Context, access
 		WithContext(ctx).
 		With("token", accessToken)
 
-	accessTokenClaims, err := token.VerifyJWTToken(accessToken, s.cfg.Auth.TokenSecretKey)
+	accessTokenClaims, err := token.VerifyJWTToken(token.VerifyJWTTokenOptions{
+		Token:                accessToken,
+		Secret:               s.cfg.Auth.TokenSecretKey,
+		NotToCheckExpiration: true,
+	})
 	if err != nil {
 		logger.Info("invalid token", "err", err)
 		return "", ErrRefreshCustomerTokenInvalidToken
@@ -127,7 +131,10 @@ func (s *customerService) RefreshCustomerAccessToken(ctx context.Context, access
 	}
 	logger.Debug("got customer", "customer", customer)
 
-	refreshAccessTokenClaims, err := token.VerifyJWTToken(customer.RefreshToken, s.cfg.Auth.TokenSecretKey)
+	refreshAccessTokenClaims, err := token.VerifyJWTToken(token.VerifyJWTTokenOptions{
+		Token:  customer.RefreshToken,
+		Secret: s.cfg.Auth.TokenSecretKey,
+	})
 	if err != nil {
 		logger.Info("invalid token", "err", err)
 		return "", ErrRefreshCustomerTokenInvalidToken
@@ -166,7 +173,10 @@ func (s *customerService) VerifyCustomerAccessToken(ctx context.Context, accessT
 		WithContext(ctx).
 		With("accessTokenStr", accessTokenStr)
 
-	accessTokenClaims, err := token.VerifyJWTToken(accessTokenStr, s.cfg.Auth.TokenSecretKey)
+	accessTokenClaims, err := token.VerifyJWTToken(token.VerifyJWTTokenOptions{
+		Token:  accessTokenStr,
+		Secret: s.cfg.Auth.TokenSecretKey,
+	})
 	if err != nil {
 		logger.Info("invalid token", "err", err)
 		return nil, ErrVerifyCustomerTokenInvalidToken

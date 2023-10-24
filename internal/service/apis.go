@@ -24,22 +24,3 @@ type VendorAPI interface {
 	// GetCustomerByVendorID returns the customer by vendor id.
 	GetCustomerByVendorID(ctx context.Context, vendorCustomerID string) (*entity.Customer, error)
 }
-
-// VendorListCustomersFilterOperator represents operator variants for VendorListCustomersFilter.
-type VendorListCustomersFilterOperator string
-
-const (
-	VendorListCustomersFilterOperatorAND VendorListCustomersFilterOperator = "AND"
-	VendorListCustomersFilterOperatorOR  VendorListCustomersFilterOperator = "OR"
-)
-
-// VendorListCustomersFilter provides filters for querying of vendor customers.
-type VendorListCustomersFilter struct {
-	// Email is the email of the customer to filter by.
-	Email *string
-	// Phone is the phone of the customer to filter by.
-	Phone *string
-	// Operator is the operator for request querying.
-	// default - AND
-	Operator VendorListCustomersFilterOperator
-}

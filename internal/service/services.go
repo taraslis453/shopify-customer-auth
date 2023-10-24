@@ -80,11 +80,6 @@ type LoginCustomerOptions struct {
 	StoreVendorID string
 }
 
-type VerifyTokenOptions struct {
-	Token      string
-	HMACSecret string
-}
-
 type GetCustomerOptions struct {
 	ID            string
 	EmailAddress  string
@@ -92,8 +87,8 @@ type GetCustomerOptions struct {
 }
 
 type GenerateCustomerTokensOutput struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
+	AccessToken  string
+	RefreshToken string
 }
 
 // VendorService provides business logic related to vendors.
