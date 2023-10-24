@@ -174,7 +174,7 @@ func newAuthMiddleware(options RouterOptions) gin.HandlerFunc {
 		logger = logger.With("customer", customer)
 		logger.Debug("verified token")
 
-		c.Set("customerID", customer.ID)
+		c.Set("userID", customer.ID)
 
 		logger.Info("successfully validated auth token")
 		return nil, nil
