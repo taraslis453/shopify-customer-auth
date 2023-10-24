@@ -49,10 +49,9 @@ func (r *customerRoutes) loginCustomer(c *gin.Context) (interface{}, *httpErr) {
 	logger.Info("successfully parsed request body")
 
 	accessToken, err := r.services.Customer.LoginCustomer(c, service.LoginCustomerOptions{
-		Email:    body.Email,
-		Password: body.Password,
-		// https://taras-store88.myshopify.com => taras-store88.myshopify.com
-		StoreVendorID: c.GetHeader("Origin")[8:],
+		Email:         body.Email,
+		Password:      body.Password,
+		StoreVendorID: getStoreVendorID(c.GetHeader("Origin")),
 	})
 	if err != nil {
 		if errs.IsExpected(err) {
@@ -112,7 +111,7 @@ func (r *customerRoutes) getCustomer(c *gin.Context) (interface{}, *httpErr) {
 
 	customer, err := r.services.Customer.GetCustomer(c, service.GetCustomerOptions{
 		ID:            customerID,
-		StoreVendorID: c.GetHeader("Origin")[8:],
+		StoreVendorID: getStoreVendorID(c.GetHeader("Origin")),
 	})
 	if err != nil {
 		if errs.IsExpected(err) {
@@ -128,4 +127,9 @@ func (r *customerRoutes) getCustomer(c *gin.Context) (interface{}, *httpErr) {
 		ID:        customer.ID,
 		FirstName: customer.FirstName,
 	}, nil
+}
+
+func getStoreVendorID(origin string) string {
+	// https://taras-store88.myshopify.com => taras-store88.myshopify.com
+	return origin[8:]
 }
