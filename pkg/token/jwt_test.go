@@ -57,7 +57,7 @@ func TestVerifyJWTToken(t *testing.T) {
 		expectedIssAt      time.Time
 		expectedNbfAt      time.Time
 		expectedExpAt      time.Time
-		expectedClaimsData interface{}
+		expectedClaimsData any
 		expectedError      error
 	}{
 		{
